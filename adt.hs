@@ -1,3 +1,5 @@
+-- Algebraic Data Types
+
 -- Basic
 
 data WeekDay = Mon | Tue | Wed | Thu | Fri | Sat | Sun deriving (Show)
@@ -26,6 +28,7 @@ nextWeekend _ = Sat
 data BST a = BSTNode (BST a) a (BST a) | BSTLeaf
 
 instance Show a => Show (BST a) where
+  show :: Show a => BST a -> String
   show tree = visualize tree 0
     where
       visualize BSTLeaf _ = ""
@@ -113,6 +116,7 @@ makeBlack (RBNode _ l x r) = RBNode Black l x r
 
 insertRB :: Ord a => RBT a -> a -> RBT a
 insertRB tree a = makeBlack (insertRBHelper tree a)
+
 
 -- Mathematical expressions
 
