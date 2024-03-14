@@ -17,7 +17,7 @@ eval (IsZero t) = 0 == eval t
 eval (If b t1 t2) = if eval b then eval t1 else eval t2
 
 {-
-Ensuring Red-Black Tree correctness in its type definition:
+Ensuring part of Red-Black Tree correctness in its type definition:
     - Leaf nodes must be black.
     - Red nodes must have only black children.
     - Black nodes do not have restrictions on the color of their children.
