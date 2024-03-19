@@ -2,10 +2,14 @@
 
 ## OTLP001 - Tópicos Especiais em Linguagens de Programação
 
+### Listas
+- [x] [ADTs (Árvores)](assignments/lista-01.hs)
+- [x] [Typeclasses (Binário)](assignments/lista-02.hs)
+
 ### Conteúdo Programático
-- [x] [Tipos de dados algébricos](adt.hs).
-- [x] [Tipos de dados algébricos generalizados](gadt.hs).
-- [ ] [Classes de tipos](typeclasses.hs).
+- [x] [Tipos de dados algébricos](classes/adt.hs).
+- [x] [Tipos de dados algébricos generalizados](classes/gadt.hs).
+- [ ] [Classes de tipos](classes/typeclasses.hs).
 - [ ] Functores (classes Functor e Applicative).
 - [ ] Mônadas.
 - [ ] Módulos.
