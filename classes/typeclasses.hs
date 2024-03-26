@@ -1,3 +1,5 @@
+{-# LANGUAGE FunctionalDependencies #-}
+
 data Tree a = Node (Tree a) a (Tree a) | Leaf
 data WeekDay = Sun | Mon | Tue | Wed | Thu | Fri | Sat
 
@@ -32,3 +34,28 @@ instance Show WeekDay where
   show Thu = "Quinta"
   show Fri = "Sexta"
   show Sat = "Sábado"
+
+data TermI = LitI Int | Succ TermI deriving Show
+data TermB = LitB Bool | IsZero TermI deriving Show
+data Term = If TermB Term Term | TB TermB | TI TermI deriving Show
+data Res = RI Int | RB Bool
+
+-- Functional Dependency
+class Eval a b | a -> b where
+  eval :: a -> b
+
+instance Eval TermI Int where
+  eval :: TermI -> Int
+  eval (LitI i) = i
+  eval (Succ t) = 1 + eval t
+
+instance Eval TermB Bool where
+  eval :: TermB -> Bool
+  eval (LitB b) = b
+  eval (IsZero t) = 0 == eval t
+
+instance Eval Term Res where
+  eval :: Term -> Res
+  eval (If b t1 t2) = if eval b then eval t1 else eval t2
+  eval (TB t) = RB (eval t)
+  eval (TI t) = RI (eval t)

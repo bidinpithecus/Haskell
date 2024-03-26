@@ -9,7 +9,7 @@
 ### Conteúdo Programático
 - [x] [Tipos de dados algébricos](classes/adt.hs).
 - [x] [Tipos de dados algébricos generalizados](classes/gadt.hs).
-- [ ] [Classes de tipos](classes/typeclasses.hs).
+- [x] [Classes de tipos](classes/typeclasses.hs).
 - [ ] Functores (classes Functor e Applicative).
 - [ ] Mônadas.
 - [ ] Módulos.
