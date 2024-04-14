@@ -17,15 +17,24 @@ instance Ord Huffman where
 
 -- Declare uma função que dada uma String retorne uma lista de folhas da árvore contendo o caractere e a frequência com que esse caractere ocorreu na String
 freq :: String -> [Huffman]
-freq [] = []
-freq (x : xs) = Leaf (length l1 + 1) x : freq l2
+freq xs = sort (freq' xs)
+
+freq' :: String -> [Huffman]
+freq' [] = []
+freq' (x : xs) = Leaf (length l1 + 1) x : freq' l2
   where (l1, l2) = partition (== x) xs
 
 -- Declare uma função que dada a lista com a frequência de cada caratere e retorne a árvore de Huffman
 makeTree :: [Huffman] -> Huffman
 makeTree [] = error "Empty list"
 makeTree [h] = h
-makeTree (h0 : h1 : hs) = makeTree (sort (merge h0 h1 : hs))
+makeTree (h0 : h1 : hs) = makeTree (insertOrdered (merge h0 h1) hs)
+
+insertOrdered :: Huffman -> [Huffman] -> [Huffman]
+insertOrdered h [] = [h]
+insertOrdered h (x : xs)
+  | h <= x = h : (x : xs)
+  | otherwise = x : insertOrdered h xs
 
 merge :: Huffman -> Huffman -> Huffman
 merge h0 h1 = Node h0 (sumFreqs h0 h1) h1
