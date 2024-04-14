@@ -4,7 +4,7 @@ import qualified Data.Binary.Put as P
 import qualified Data.Binary.Get as G
 import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Internal as I
-import Data.Bits ()
+import Data.Bits (Bits (shift, (.&.)))
 
 type Reg = (Word8, Word32)
 data Huffman = Leaf Int Char | Node Huffman Int Huffman deriving Show
@@ -42,6 +42,10 @@ merge h0 h1 = Node h0 (sumFreqs h0 h1) h1
 weight :: Huffman -> Int
 weight (Leaf w _) = w
 weight (Node _ w _) = w
+
+char :: Huffman -> Char
+char (Leaf _ c) = c
+char (Node {}) = error "A node doesn't have a char"
 
 sumFreqs :: Huffman -> Huffman -> Int
 sumFreqs h0 h1 = weight h0 + weight h1
@@ -85,49 +89,107 @@ traverseHuffmanTree (c : cs) (Node l _ r)
   | c == '1' = traverseHuffmanTree cs r
   | otherwise = error "Invalid Huffman encoding"
 
--- write :: IO ()
--- write =
---   do
---     putStr "Nome do arquivo: "
---     na <- getLine
---     txt <- readFile na
---     let bs = P.runPut (put $ freq txt)
---     L.writeFile (na ++ ".out") bs
 
--- put :: [(Char, Int)] -> P.PutM ()
--- put [] = P.flush
--- put ((c, f) : xs) =
---   do
---     P.putWord8 (I.c2w c)
---     P.putWord32be (toEnum f)
---     put xs
+--
+compress :: IO ()
+compress =
+  do
+    putStr "Input file: "
+    inputFile <- getLine
+    content <- readFile inputFile
+    let frequencies = freq content
+    let code = encode content (makeTree frequencies)
+    let sizesBS = P.runPut (putFirstPart (length frequencies) (8 - rem (length code) 8))
+    let frequenciesBS = P.runPut (putFrequenciesList frequencies)
+    let codeBS = P.runPut (putCompressedText code)
+    L.writeFile (inputFile ++ ".compressed") (sizesBS <> frequenciesBS <> codeBS)
 
--- read' :: IO ()
--- read' =
---   do
---     putStr "Nome do arquivo: "
---     na <- getLine
---     bs <- L.readFile na
---     let rs = G.runGet getRegs bs
---     printRegs rs
+putFirstPart :: Int -> Int -> P.Put
+putFirstPart i0 i1 =
+  do
+    P.putWord8 (toEnum i0)
+    P.putWord32be (toEnum i1)
+    P.flush
 
--- getReg :: G.Get (Word8, Word32)
--- getReg =
---   do
---     c <- G.getWord8
---     f <- G.getWord32be
---     return (c, f)
+putFrequenciesList :: [Huffman] -> P.Put
+putFrequenciesList [] = P.flush
+putFrequenciesList (h : hs) =
+  do
+    P.putWord8 (I.c2w $ char h)
+    P.putWord32be (toEnum $ weight h)
+    putFrequenciesList hs
 
--- getRegs :: G.Get [(Word8, Word32)]
--- getRegs =
---   do
---     empty <- G.isEmpty
---     if empty then return []
---     else do { r <- getReg; rs <- getRegs; return (r:rs) }
+putCompressedText :: String -> P.Put
+putCompressedText [] = P.flush
+putCompressedText s =
+  do
+    P.putWord8 (s2w (take 8 s))
+    putCompressedText (drop 8 s)
 
--- printRegs :: Show a => [(Word8, a)] -> IO()
--- printRegs [] = return ()
--- printRegs ((c, f) : rs) =
---   do
---     putStrLn $ show (I.w2c c) ++ "-" ++ show f
---     printRegs rs
+s2w :: String -> Word8
+s2w s = s2wHelper s 7
+
+s2wHelper :: String -> Int -> Word8
+s2wHelper [] _ = 0
+s2wHelper (c : cs) n = shift (read [c]) n + s2wHelper cs (n - 1)
+
+decompress :: IO ()
+decompress =
+  do
+    putStr "Nome do arquivo: "
+    compressedFile <- getLine
+    bs <- L.readFile compressedFile
+    let (diffChars, totalChars) = G.runGet getReg bs
+    let frequencies = r2l (G.runGet getRegs (L.take (read (show diffChars) * 5) (L.drop 5 bs)))
+    let content = G.runGet getMessage (L.drop (read (show diffChars) * 5 + 5) bs)
+    let message = concatMap w2s content
+    let encodedMessage = take (length message - fromEnum totalChars) message
+    let decodedMessage = decode encodedMessage (makeTree frequencies)
+    writeFile (compressedFile ++ ".decompressed") decodedMessage
+
+getReg :: G.Get (Word8, Word32)
+getReg =
+  do
+    c <- G.getWord8
+    f <- G.getWord32be
+    return (c, f)
+
+r2l :: [Reg] -> [Huffman]
+r2l r = sort (r2l' r)
+
+r2l' :: [Reg] -> [Huffman]
+r2l' [] = []
+r2l' ((c, w) : rs) = Leaf (read (show w)) (I.w2c c) : r2l' rs
+
+w2s :: Word8 -> String
+w2s w = w2sHelper w 128
+
+w2sHelper :: Word8 -> Word8 -> String
+w2sHelper _ 0 = []
+w2sHelper w n
+  | w .&. n == 0 = '0' : w2sHelper w (shift n (-1))
+  | otherwise = '1' : w2sHelper w (shift n (-1))
+
+getRegs :: G.Get [(Word8, Word32)]
+getRegs =
+  do
+    empty <- G.isEmpty
+    if empty then return []
+    else do { r <- getReg; rs <- getRegs; return (r : rs) }
+
+getMessage :: G.Get [Word8]
+getMessage =
+  do
+    empty <- G.isEmpty
+    if empty then return []
+    else do { m <- getCharacter; ms <- getMessage; return (m : ms)}
+
+getCharacter :: G.Get Word8
+getCharacter = G.getWord8 >>= \c -> return c
+
+printRegs :: Show a => [(Word8, a)] -> IO()
+printRegs [] = return ()
+printRegs ((c, f) : rs) =
+  do
+    putStrLn $ show (I.w2c c) ++ "-" ++ show f
+    printRegs rs
