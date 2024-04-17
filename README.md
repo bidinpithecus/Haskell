@@ -9,7 +9,7 @@
 - [x] [Typeclasses (Binário)](assignments/exe-02/)
   - [Prompt](assignments/exe-02/prompt.pdf)
   - [Answer](assignments/exe-02/answer.hs)
-- [ ] [Huffman](assignments/exe-03/)
+- [x] [Huffman](assignments/exe-03/)
   - [Prompt](assignments/exe-03/prompt.pdf)
   - [Answer](assignments/exe-03/answer.hs)
 
