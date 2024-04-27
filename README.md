@@ -17,7 +17,7 @@
 - [x] [Tipos de dados algébricos](classes/adt.hs).
 - [x] [Tipos de dados algébricos generalizados](classes/gadt.hs).
 - [x] [Classes de tipos](classes/typeclasses.hs).
-- [ ] Functores (classes Functor e Applicative).
+- [ ] [Functores (classes Functor e Applicative)](classes/functor.hs).
 - [ ] [Mônadas](classes/monad.hs).
 - [ ] Módulos.
 - [ ] Gerenciador de pacotes (Cabal).
